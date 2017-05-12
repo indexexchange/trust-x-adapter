@@ -232,9 +232,12 @@ window.headertag.partnerScopes.push(function() {
         //? }
 
         var yourBidder = new Partner(config);
+
+        window.TrustXHtb = {};
+        window.TrustXHtb.render = yourBidder.renderAd;
+
         window.headertag[PARTNER_ID] = {};
         window.headertag[PARTNER_ID].callback = yourBidder.responseCallback;
-        window.headertag[PARTNER_ID].render = yourBidder.renderAd;
 
         callback(null, yourBidder);
     }
