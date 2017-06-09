@@ -59,6 +59,7 @@ window.headertag.partnerScopes.push(function() {
     var Utils = window.headertag.Utils;
     var Network = window.headertag.Network;
     var BidRoundingTransformer = window.headertag.BidRoundingTransformer;
+    var GlobalConfig = window.headertagconfig || {};
 
     function validateTargetingType(tt) {
         return typeof tt === 'string' && SUPPORTED_TARGETING_TYPES[tt];
@@ -95,6 +96,13 @@ window.headertag.partnerScopes.push(function() {
          */
 
         /* PUT CODE HERE */
+
+        if (config.hasOwnProperty('timeout') && (
+            !Utils.isNumber(config.timeout) ||
+            config.timeout < 0
+            )) {
+            err.push('timeout must be a real number');
+        }
 
         /* -------------------------------------------------------------------------- */
 
@@ -133,7 +141,16 @@ window.headertag.partnerScopes.push(function() {
          */
 
         /* PUT CODE HERE */
+                if (!Utils.isObject(config.xSlots[xSlotName])) {
+                    err.push('xSlot must be an object');
+                }
 
+                if (!config.xSlots[xSlotName].hasOwnProperty('placement') ||
+                    !config.xSlots[xSlotName].placement ||
+                    isNaN(1 * config.xSlots[xSlotName].placement.toString())
+                ) {
+                    err.push('placement must be defined and must be a number or a number like string');
+                }
         /* -------------------------------------------------------------------------- */
 
             }
@@ -231,7 +248,7 @@ window.headertag.partnerScopes.push(function() {
 
         //? }
 
-        var yourBidder = new Partner(config);
+        var yourBidder = new TrustX(config);
 
         window.headertag.TrustXHtb = {};
         window.headertag.TrustXHtb.render = yourBidder.renderAd;
@@ -242,7 +259,7 @@ window.headertag.partnerScopes.push(function() {
         callback(null, yourBidder);
     }
 
-    function Partner(config) {
+    function TrustX(config) {
         var _this = this;
 
         var __targetingType = config.targetingType;
@@ -337,6 +354,18 @@ window.headertag.partnerScopes.push(function() {
          */
 
         /* PUT CODE HERE */
+        var globalTimeout = GlobalConfig.timeout;
+        var adapterTimeout = config.timeout;
+        var htSlotMapping = config.mapping;
+        var xSlotsConfig = config.xSlots;
+        var callbackName = 'window.headertag["'+PARTNER_ID+'"].callback';
+        var protocol = 'https:' === location.protocol? 'https:' : 'http:';
+        var mainUrl = protocol + '//sofia.trustx.org/hb';
+        var tmpSavedResults = {};
+
+        if (globalTimeout) {
+            adapterTimeout = adapterTimeout? Math.min(adapterTimeout, globalTimeout) : globalTimeout
+        }
 
         /* -------------------------------------------------------------------------- */
 
@@ -351,6 +380,21 @@ window.headertag.partnerScopes.push(function() {
         this.getSupportedOptions = function getSupportedOptions() {
             return __supportedOptions;
         };
+
+        function tryToSendStat(startTime, timeout, uids, isTimeouted, error) {
+            if (Math.random() < 0.1) {
+                var stat = {
+                    wrapper: 'index',
+                    tt: timeout,
+                    ct: Utils.now() - startTime,
+                    st: isTimeouted? 'to' : error? 'err' : 'ok',
+                    cr: 10
+                };
+                stat = encodeURIComponent(JSON.stringify(stat));
+                uids = encodeURIComponent(uids.join(','));
+                (new Image()).src = protocol + '//sofia.trustx.org/hbstat?auids='+uids+'&stat='+stat+'&rnd=' + Math.random();
+            }
+        }
 
         function __requestDemandForSlots(htSlotNames, callback){
 
@@ -390,22 +434,133 @@ window.headertag.partnerScopes.push(function() {
              */
 
             /* PUT CODE HERE */
+            var placements = [];
+            for (var placementsMap = {}, xSlots, i=0, l=htSlotNames.length; i<l; i++) {
+                xSlots = htSlotMapping[htSlotNames[i]];
+                if (xSlots) {
+                    for (var xSlot, j=0, n=xSlots.length; j<n; j++) {
+                        xSlot = xSlotsConfig[xSlots[j]];
+                        if (xSlot && !placementsMap[xSlot.placement]) {
+                            placementsMap[xSlot.placement] = xSlots[j];
+                            placements.push(xSlot.placement);
+                        }
+                    }
+                }
+            }
 
+            var uniq = Math.random().toString(16).substr(2);
+
+            Network.ajax({
+                async: true,
+                timeout: 10000,
+                method: "GET",
+                jsonp: true,
+                withCredentials: true,
+                data: {
+                    auids: placements.join(','),
+                    u: Utils.getPageUrl(),
+                    pt: 'net',
+                    cb: callbackName + '("' + uniq + '")',
+                    rnd: uniq
+                },
+                url: mainUrl,
+                onTimeout: function(){
+                    callback('Trustx request is timeouted', null, placements);
+                },
+                onSuccess: function (responseText) {
+                    var result = null, errorMessage = null;
+                    try {
+                        responseText && eval(responseText);
+                        var savedResponse = tmpSavedResults[uniq];
+                        delete tmpSavedResults[uniq];
+                        if (savedResponse && Utils.isObject(savedResponse)) {
+                            var sizeId, storeObject, bid, i, l, xSlots, bidIds, bidValues, deals, demand, xSlotsData = {};
+                            result = {};
+                            if (savedResponse.seatbid) {
+                                for (i=0, l=savedResponse.seatbid.length; i<l; i++) {
+                                    bid = savedResponse.seatbid[i] && savedResponse.seatbid[i].bid;
+                                    if (bid && bid[0] && bid[0].auid && bid[0].adm && placementsMap[bid[0].auid]) {
+                                        xSlotsData[placementsMap[bid[0].auid]] = bid[0];
+                                    }
+                                }
+                                for (i=0, l=htSlotNames.length; i<l; i++) {
+                                    xSlots = htSlotMapping[htSlotNames[i]];
+                                    bidIds = [];
+                                    bidValues = [];
+                                    deals = [];
+                                    for (var j=0, n=xSlots.length; j<n; j++) {
+                                        if (xSlotsData[xSlots[j]]) {
+                                            bid = xSlotsData[xSlots[j]];
+                                            storeObject = __creativeStore[bid.auid] || {};
+                                            sizeId = bid.w + 'x' + bid.h;
+                                            storeObject[sizeId] = { ad: bid.adm };
+                                            __creativeStore[bid.auid] = storeObject;
+
+                                            bidIds.push(bid.auid);
+                                            bidValues.push(sizeId + '_' + '200');//__bidTransformer.transformBid(bid.price));
+                                            deals.push(bid.dealid? sizeId + '_' + 'deal' : '');//bid.dealid
+
+                                        }
+                                    }
+                                    if (bidIds.length) {
+                                        demand = {};
+                                        demand[__targetingKeys.idKey] = bidIds.length > 1 ? bidIds : bidIds[0];
+                                        demand[__targetingKeys.omKey] = bidValues.length > 1 ? bidValues : bidValues[0];
+                                        if (deals[0]) {
+                                            demand[__targetingKeys.pmidKey] = deals.length > 1? deals : deals[0];
+                                        }
+                                        result[htSlotNames[i]] = { demand: demand };
+                                    }
+                                }
+                            }
+                        } else {
+                            errorMessage ='Unable to get demand from trustx, wrong response was received';
+                        }
+                    } catch(err) {
+                        errorMessage = 'Unable to get demand from trustx, error ' + (err.message || err.toString()) + ' received';
+                    }
+                    callback(errorMessage, result, placements);
+                },
+                onFailure: function (status) {
+                    callback('Unable to get demand from trustx, ' + status + ' received', null, placements);
+                }
+            });
             /* -------------------------------------------------------------------------- */
 
         }
 
         this.getDemand = function getDemand(correlator, slots, callback) {
+            var startTime = Utils.now();
+            var requestIsTimeouted = false;
+            if (adapterTimeout) {
+                var getDemandTimeout = setTimeout(function(){
+                    requestIsTimeouted = true;
+                    //? if (DEBUG)
+                    console.log(PARTNER_ID + ' is timeouted');
+                }, adapterTimeout);
+            }
             var htSlotNames = Utils.getDivIds(slots);
+            var demand = { slot: {} };
+            function callCallback(err, result, requestedUids) {
+                if (getDemandTimeout) {
+                    clearTimeout(getDemandTimeout);
+                }
+                tryToSendStat(startTime, adapterTimeout, requestedUids, requestIsTimeouted, err);
+                err? callback(err) : callback(null, result);
+            }
 
-            __requestDemandForSlots(htSlotNames, function(err, demandForSlots){
+            __requestDemandForSlots(htSlotNames, function(err, demandForSlots, requestedUids){
                 if (err) {
-                    callback(err);
+                    if (Utils.isString(err)) {
+                        //? if (DEBUG)
+                        console.log(err);
+                    }
+                    callCallback(err, null, requestedUids);
                     return;
                 }
 
                 if(!demandForSlots){
-                    callback('Error: demandForSlots not set');
+                    callCallback('Error: demandForSlots not set', null, requestedUids);
                     return;
                 }
 
@@ -416,22 +571,24 @@ window.headertag.partnerScopes.push(function() {
                     demand.slot[htSlotName] = demandForSlots[htSlotName];
                     demand.slot[htSlotName].timestamp = Utils.now();
                 }
-                callback(null, demand);
+                callCallback(null, demand, requestedUids);
             });
         };
 
-        this.responseCallback = function(responseObj){
-            /* =============================================================================
-             * SECTION G | Parse Demand from the Module's Ad Server
-             * -----------------------------------------------------------------------------
-             *
-             * Run this function as a callback when the ad server responds with demand.
-             * Store creatives and demand in global objects as needed for processing.
-             */
+        this.responseCallback = function(uniq){
+            return function(responseObj) {
+                /* =============================================================================
+                 * SECTION G | Parse Demand from the Module's Ad Server
+                 * -----------------------------------------------------------------------------
+                 *
+                 * Run this function as a callback when the ad server responds with demand.
+                 * Store creatives and demand in global objects as needed for processing.
+                 */
 
-            /* PUT CODE HERE */
-
-            /* -------------------------------------------------------------------------- */
+                /* PUT CODE HERE */
+                tmpSavedResults[uniq] = responseObj;
+                /* -------------------------------------------------------------------------- */
+            }
         };
 
         this.renderAd = function(doc, targetingMap, width, height) {
