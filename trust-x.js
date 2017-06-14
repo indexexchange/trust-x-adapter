@@ -338,6 +338,7 @@ window.headertag.partnerScopes.push(function() {
          *
          * var roundedBid = bidTransformer.transformBid(rawBid);
          */
+
         __bidTransformer = BidRoundingTransformer(__bidTransformConfig);
 
         /* =============================================================================
@@ -497,8 +498,8 @@ window.headertag.partnerScopes.push(function() {
                                             __creativeStore[bid.auid] = storeObject;
 
                                             bidIds.push(bid.auid);
-                                            bidValues.push(sizeId + '_' + '200');//__bidTransformer.transformBid(bid.price));
-                                            deals.push(bid.dealid? sizeId + '_' + 'deal' : '');//bid.dealid
+                                            bidValues.push(sizeId + '_' + __bidTransformer.transformBid(bid.price));
+                                            deals.push(bid.dealid? sizeId + '_' + bid.dealid : '');
 
                                         }
                                     }
