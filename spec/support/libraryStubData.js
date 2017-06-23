@@ -1,5 +1,4 @@
 var partnerStub = require('./partnerStub.js');
-var openRtbStub = require('./openRtbStub.js');
 var libraryStubData = {
     'bid-transformer.js': function (config) {
         return {
@@ -37,7 +36,6 @@ var libraryStubData = {
         },
     },
     'partner.js': partnerStub,
-    'openrtb.js': openRtbStub,
     'size.js': {
         arrayToString: function (arr) {
             return arr[0] + 'x' + arr[1];

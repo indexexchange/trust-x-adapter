@@ -6,6 +6,13 @@
  *  window namespace here, but this is discouraged if it's not strictly needed.
  */
 
+//? if(FEATURES.GPT_LINE_ITEMS) {
 shellInterface.TrustXHtb = {
     render: SpaceCamp.services.RenderService.renderDfpAd.bind(null, 'TrustXHtb')
 };
+//? }
+
+if (__directInterface.Layers.PartnersLayer.Partners.TrustXHtb) {
+    shellInterface.TrustXHtb = shellInterface.TrustXHtb || {};
+    shellInterface.TrustXHtb.adResponseCallbacks = __directInterface.Layers.PartnersLayer.Partners.TrustXHtb.adResponseCallbacks;
+}

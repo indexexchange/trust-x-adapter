@@ -41,7 +41,7 @@ var partnerValidator = function (configs) {
                     '*': {
                         type: 'object',
                         properties: {
-                            placementId: {
+                            adSlotId: {
                                 type: 'string',
                                 minLength: 1
                             }

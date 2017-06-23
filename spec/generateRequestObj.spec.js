@@ -120,6 +120,75 @@ describe('generateRequestObj', function () {
                 */
             expect(requestObject).to.exist;
         });
+
+        it('should contain a url property', function () {
+            expect(requestObject.url).to.exist;
+        });
+
+        it('should contain a url property that is a string', function () {
+            expect(typeof requestObject.url).to.be.string;
+        });
+
+        it('should contain a url that contains the bid request domain', function () {
+            var domain = '//sofia.trustx.org/hb';
+            expect(requestObject.url.includes(domain)).to.be.true;
+        });
+
+        it('should contain a data property', function () {
+            expect(requestObject.data).to.exist;
+        });
+
+        it('should contain a data property that is an object', function () {
+            expect(typeof requestObject.data === 'object').to.be.true;
+        });
+
+        it('should contain a data.auids property', function () {
+            expect(requestObject.data.auids).to.exist;
+        });
+
+        it('should contain a data.auids property that is a string', function () {
+            expect(typeof requestObject.data.auids).to.be.string;
+        });
+
+        it('should contain a data.auids property that is a comma separated string', function () {
+            expect(requestObject.data.auids.indexOf(',') >= 0).to.be.true;
+        });
+
+        it('should contain a data.a u property', function () {
+            expect(requestObject.data.u).to.exist;
+        });
+
+        it('should contain a data.u property that is a string', function () {
+            expect(typeof requestObject.data.u === 'string').to.be.true;
+        });
+
+        it('should contain a data.pt property', function () {
+            expect(requestObject.data.pt).to.exist;
+        });
+
+        it('should contain a data.pt property that is a string', function () {
+            expect(typeof requestObject.data.pt === 'string').to.be.true;
+        });
+
+        it('should contain a data.pt property with a value of "net"', function () {
+            expect(requestObject.data.pt.localeCompare('net') === 0).to.be.true;
+        });
+
+        it('should contain a callbackId property', function () {
+            expect(requestObject.callbackId).to.exist;
+        });
+
+        it('should contain a callbackId property', function () {
+            expect(typeof requestObject.callbackId === 'string').to.be.true;
+        });
+
+        it('should contain a data.cb u property', function () {
+            expect(requestObject.data.u).to.exist;
+        });
+
+        it('should contain a data.cb property that is a string', function () {
+            expect(typeof requestObject.data.u === 'string').to.be.true;
+        });
         /* -----------------------------------------------------------------------*/
 
     /* ---------- IF MRA, generate a single request for all the parcels ---------- */

@@ -2,22 +2,13 @@
     "timeout": 1000,
     "xSlots": {
         "1": {
-            "placementId": "54321",
-            "sizes": [
-                [300, 250]
-            ]
+            "adSlotId": "54321"
         },
         "2": {
-            "placementId": "12345",
-            "sizes": [
-                [300, 600]
-            ]
+            "adSlotId": "12345"
         },
         "3": {
-            "placementId": "654321",
-            "sizes": [
-                [728, 90]
-            ]
+            "adSlotId": "654321"
         }
     },
     "mapping": {
