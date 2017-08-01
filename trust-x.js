@@ -59,7 +59,6 @@ window.headertag.partnerScopes.push(function() {
     var Utils = window.headertag.Utils;
     var Network = window.headertag.Network;
     var BidRoundingTransformer = window.headertag.BidRoundingTransformer;
-    var GlobalConfig = window.headertagconfig || {};
 
     function validateTargetingType(tt) {
         return typeof tt === 'string' && SUPPORTED_TARGETING_TYPES[tt];
@@ -350,11 +349,6 @@ window.headertag.partnerScopes.push(function() {
          */
 
         /* PUT CODE HERE */
-        var requestTimeout = 10000;
-        /*
-         requestTimeout is default timeout, that is needed to limit the time of the request in the case,
-         when the timeout is not specified in the config
-         */
         var htSlotMapping = config.mapping;
         var xSlotsConfig = config.xSlots;
         var callbackName = 'window.headertag["'+PARTNER_ID+'"].callback';
@@ -438,8 +432,6 @@ window.headertag.partnerScopes.push(function() {
             var uniq = Math.random().toString(16).substr(2);
 
             Network.ajax({
-                async: true,
-                timeout: requestTimeout,
                 method: "GET",
                 jsonp: true,
                 withCredentials: true,
