@@ -349,6 +349,15 @@ window.headertag.partnerScopes.push(function() {
          */
 
         /* PUT CODE HERE */
+        var getUniqueId = function () {
+            var uniqueId = 0;
+            return function () {
+                var retVal = uniqueId + '_' + ((Math.random() * 9999) | 0);
+                uniqueId++;
+                return retVal;
+            };
+        }();
+
         var htSlotMapping = config.mapping;
         var xSlotsConfig = config.xSlots;
         var callbackName = 'window.headertag["'+PARTNER_ID+'"].callback';
@@ -471,17 +480,19 @@ window.headertag.partnerScopes.push(function() {
                                 l = htSlotNames.length;
                                 for (i=0; i<l; i++) {
                                     var xSlots = htSlotMapping[htSlotNames[i]];
+                                    if (!xSlots) continue;
                                     var bidIds = [];
                                     var bidValues = [];
                                     var deals = [];
+                                    var idKey = getUniqueId();
                                     var n = xSlots.length;
                                     for (var j=0; j<n; j++) {
                                         if (xSlotsData[xSlots[j]]) {
                                             bid = xSlotsData[xSlots[j]];
-                                            var storeObject = __creativeStore[bid.auid] || {};
+                                            var storeObject = __creativeStore[idKey] || {};
                                             var sizeId = bid.w + 'x' + bid.h;
                                             storeObject[sizeId] = { ad: bid.adm };
-                                            __creativeStore[bid.auid] = storeObject;
+                                            __creativeStore[idKey] = storeObject;
 
                                             bidIds.push(bid.auid);
                                             bidValues.push(sizeId + '_' + __bidTransformer.transformBid(bid.price));
@@ -491,7 +502,7 @@ window.headertag.partnerScopes.push(function() {
                                     }
                                     if (bidIds.length) {
                                         var demand = {};
-                                        demand[__targetingKeys.idKey] = bidIds.length > 1 ? bidIds : bidIds[0];
+                                        demand[__targetingKeys.idKey] = idKey;
                                         demand[__targetingKeys.omKey] = bidValues.length > 1 ? bidValues : bidValues[0];
                                         if (deals[0]) {
                                             demand[__targetingKeys.pmidKey] = deals.length > 1? deals : deals[0];
@@ -575,7 +586,7 @@ window.headertag.partnerScopes.push(function() {
             if (doc && targetingMap && width && height) {
                 try {
                     var id = targetingMap[__targetingKeys.idKey][0];
-                    
+
                     var sizeKey = width + 'x' + height;
                     if (window.headertag.sizeRetargeting && window.headertag.sizeRetargeting[sizeKey]){
                         width = window.headertag.sizeRetargeting[sizeKey][0];
