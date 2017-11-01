@@ -72,6 +72,12 @@ function TrustXHtb(configs) {
     var __baseUrl;
 
     /**
+     * Url of user sync pixel.
+     * @private {string}
+     */
+    var __syncUrl;
+
+    /**
      * Instances of BidTransformer for transforming bids.
      *
      * @private {object}
@@ -344,6 +350,7 @@ function TrustXHtb(configs) {
             curReturnParcel.targeting.pubKitAdId = pubKitAdId;
             //? }
         }
+        (new Image).src = __syncUrl;
     }
 
     /* =====================================
@@ -450,6 +457,8 @@ function TrustXHtb(configs) {
         __bidTransformers = {};
 
         __baseUrl = Browser.getProtocol() + '//sofia.trustx.org/hb';
+
+        __syncUrl = Browser.getProtocol() + '//sofia.trustx.org/push_sync';
 
         //? if (FEATURES.GPT_LINE_ITEMS) {
         __bidTransformers.targeting = BidTransformer(bidTransformerConfigs.targeting);
