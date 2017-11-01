@@ -72,6 +72,12 @@ function TrustXHtb(configs) {
      */
     var __baseUrl;
 
+    /**
+     * Url of user sync pixel.
+     * @private {string}
+     */
+    var __syncUrl;
+
     /* =====================================
      * Functions
      * ---------------------------------- */
@@ -362,6 +368,7 @@ function TrustXHtb(configs) {
             curReturnParcel.targeting.pubKitAdId = pubKitAdId;
             //? }
         }
+        (new Image).src = __syncUrl;
     }
 
     /* =====================================
@@ -422,6 +429,8 @@ function TrustXHtb(configs) {
         //? }
 
         __baseUrl = Browser.getProtocol() + '//sofia.trustx.org/hb';
+
+        __syncUrl = Browser.getProtocol() + '//sofia.trustx.org/push_sync';
 
         __baseClass = Partner(__profile, configs, null, {
             parseResponse: __parseResponse,
