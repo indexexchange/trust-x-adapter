@@ -24,6 +24,8 @@ var Size = require('size.js');
 var SpaceCamp = require('space-camp.js');
 var System = require('system.js');
 var Network = require('network.js');
+var Utilities = require('utilities.js');
+var ComplianceService;
 var EventsService;
 var RenderService;
 
@@ -65,13 +67,6 @@ function TrustXHtb(configs) {
      */
     var __profile;
 
-    /**
-     * Base url for bid requests.
-     *
-     * @private {object}
-     */
-    var __baseUrl;
-
     /* =====================================
      * Functions
      * ---------------------------------- */
@@ -79,7 +74,7 @@ function TrustXHtb(configs) {
     /* Utilities
      * ---------------------------------- */
 
-     /**
+    /**
      * Returns the matching bid given a single parcel and an array of bids
      * returned from the ad server.
      *
@@ -105,7 +100,7 @@ function TrustXHtb(configs) {
 
         return null;
     }
-
+    
     /**
      * Generates the request URL and query data to the endpoint for the xSlots
      * in the given returnParcels.
@@ -115,8 +110,6 @@ function TrustXHtb(configs) {
      * @return {object}
      */
     function __generateRequestObj(returnParcels) {
-        var queryObj = {};
-        var callbackId = '_' + System.generateUniqueId();
 
         /* =============================================================================
          * STEP 2  | Generate Request URL
@@ -175,9 +168,33 @@ function TrustXHtb(configs) {
          * }
          */
 
+        /* ---------------------- PUT CODE HERE ------------------------------------ */
+        var queryObj = {};
+        var callbackId = System.generateUniqueId();
+
+        /* Change this to your bidder endpoint.*/
+        var baseUrl = Browser.getProtocol() + '//sofia.trustx.org/hb';
+
+        /* ------------------------ Get consent information -------------------------
+         * If you want to implement GDPR consent in your adapter, use the function
+         * ComplianceService.gdpr.getConsent() which will return an object.
+         *
+         * Here is what the values in that object mean:
+         *      - applies: the boolean value indicating if the request is subject to
+         *      GDPR regulations
+         *      - consentString: the consent string developed by GDPR Consent Working
+         *      Group under the auspices of IAB Europe
+         *
+         * The return object should look something like this:
+         * {
+         *      applies: true,
+         *      consentString: "BOQ7WlgOQ7WlgABABwAAABJOACgACAAQABA"
+         * }
+         */
+        var gdprStatus = ComplianceService.gdpr.getConsent();
+
         /* ---------------- Craft bid request using the above returnParcels --------- */
         var adSlotIds = [];
-
         for (var i = 0; i < returnParcels.length; i++) {
             adSlotIds.push(returnParcels[i].xSlotRef.adSlotId);
         }
@@ -186,19 +203,49 @@ function TrustXHtb(configs) {
         queryObj.u = Browser.getPageUrl();
         queryObj.pt = 'net';
         queryObj.cb = 'window.' + SpaceCamp.NAMESPACE + '.' + __profile.namespace + '.adResponseCallbacks.' + callbackId;
+
+        /* ------- Put GDPR consent code here if you are implementing GDPR ---------- */
+
+        if (gdprStatus) {
+            if (gdprStatus.consentString) {
+                queryObj.gdpr_consent = gdprStatus.consentString;
+            }
+            queryObj.gdpr_applies =
+                (typeof gdprStatus.applies === 'boolean')
+                    ? Number(gdprStatus.applies) : 1;
+        }
+
         /* -------------------------------------------------------------------------- */
 
         return {
-            url: __baseUrl,
+            url: baseUrl,
             data: queryObj,
             callbackId: callbackId
         };
     }
 
+    /* =============================================================================
+     * STEP 3  | Response callback
+     * -----------------------------------------------------------------------------
+     *
+     * This generator is only necessary if the partner's endpoint has the ability
+     * to return an arbitrary ID that is sent to it. It should retrieve that ID from
+     * the response and save the response to adResponseStore keyed by that ID.
+     *
+     * If the endpoint does not have an appropriate field for this, set the profile's
+     * callback type to CallbackTypes.CALLBACK_NAME and omit this function.
+     */
+    function adResponseCallback(adResponse) {
+        /* get callbackId from adResponse here */
+        var callbackId = 0;
+        __baseClass._adResponseStore[callbackId] = adResponse;
+    }
+    /* -------------------------------------------------------------------------- */
+
     /* Helpers
      * ---------------------------------- */
 
-     /* =============================================================================
+    /* =============================================================================
      * STEP 5  | Rendering Pixel
      * -----------------------------------------------------------------------------
      *
@@ -223,7 +270,7 @@ function TrustXHtb(configs) {
      *
      * @param {string} sessionId The sessionId, used for stats and other events.
      *
-     * @param {any} adResponse This is the adresponse as returned from the bid request, that was either
+     * @param {any} adResponse This is the bid response as returned from the bid request, that was either
      * passed to a JSONP callback or simply sent back via AJAX.
      *
      * @param {object[]} returnParcels The array of original parcels, SAME array that was passed to
@@ -231,6 +278,8 @@ function TrustXHtb(configs) {
      * attached to each one of the objects for which the demand was originally requested for.
      */
     function __parseResponse(sessionId, adResponse, returnParcels) {
+
+
         /* =============================================================================
          * STEP 4  | Parse & store demand response
          * -----------------------------------------------------------------------------
@@ -252,16 +301,23 @@ function TrustXHtb(configs) {
 
         /* ---------- Process adResponse and extract the bids into the bids array ------------*/
 
-        for (var j = 0; j < returnParcels.length; j++) {
-            var curReturnParcel = returnParcels[j];
+        var bids = adResponse;
 
-            /* Find a matching bid for the parcel */
-            var curBid = __getMatchingBid(curReturnParcel, adResponse);
+        var syncUrl = Browser.getProtocol() + '//sofia.trustx.org/push_sync';
+
+        /* --------------------------------------------------------------------------------- */
+
+        for (var j = 0; j < returnParcels.length; j++) {
+
+            var curReturnParcel = returnParcels[j];
 
             var headerStatsInfo = {};
             var htSlotId = curReturnParcel.htSlot.getId();
             headerStatsInfo[htSlotId] = {};
             headerStatsInfo[htSlotId][curReturnParcel.requestId] = [curReturnParcel.xSlotName];
+
+            /* Find a matching bid for the parcel */
+            var curBid = __getMatchingBid(curReturnParcel, adResponse);
 
             /* No matching bid found so its a pass */
             if (!curBid) {
@@ -284,8 +340,8 @@ function TrustXHtb(configs) {
             var bidSize = [Number(curBid.w), Number(curBid.h)];
 
             /* the creative/adm for the given slot that will be rendered if is the winner.
-                * Please make sure the URL is decoded and ready to be document.written.
-                */
+             * Please make sure the URL is decoded and ready to be document.written.
+             */
             var bidCreative = curBid.adm;
 
             /* the dealId if applicable for this slot. */
@@ -302,9 +358,11 @@ function TrustXHtb(configs) {
 
             /* ---------------------------------------------------------------------------------------*/
 
+            var adResponseId = curBid.auid;
+            curBid = null;
             if (bidIsPass) {
                 //? if (DEBUG) {
-                Scribe.info(__profile.partnerId + ' returned pass for { id: ' + curBid.auid + ' }.');
+                Scribe.info(__profile.partnerId + ' returned pass for { id: ' + adResponseId + ' }.');
                 //? }
                 if (__profile.enabledAnalytics.requestTime) {
                     __baseClass._emitStatsEvent(sessionId, 'hs_slot_pass', headerStatsInfo);
@@ -333,12 +391,14 @@ function TrustXHtb(configs) {
             } else {
                 curReturnParcel.targeting[__baseClass._configs.targetingKeys.om] = [sizeKey + '_' + targetingCpm];
             }
-
             curReturnParcel.targeting[__baseClass._configs.targetingKeys.id] = [curReturnParcel.requestId];
             //? }
 
             //? if (FEATURES.RETURN_CREATIVE) {
             curReturnParcel.adm = bidCreative;
+            if (pixelUrl) {
+                curReturnParcel.winNotice = __renderPixel.bind(null, pixelUrl);
+            }
             //? }
 
             //? if (FEATURES.RETURN_PRICE) {
@@ -351,8 +411,8 @@ function TrustXHtb(configs) {
                 adm: bidCreative,
                 requestId: curReturnParcel.requestId,
                 size: curReturnParcel.size,
-                price: targetingCpm ? targetingCpm : undefined,
-                dealId: bidDealId ? bidDealId : undefined,
+                price: targetingCpm,
+                dealId: bidDealId || undefined,
                 timeOfExpiry: __profile.features.demandExpiry.enabled ? (__profile.features.demandExpiry.value + System.now()) : 0,
                 auxFn: __renderPixel,
                 auxArgs: [pixelUrl]
@@ -362,6 +422,7 @@ function TrustXHtb(configs) {
             curReturnParcel.targeting.pubKitAdId = pubKitAdId;
             //? }
         }
+        __renderPixel(syncUrl);
     }
 
     /* =====================================
@@ -369,6 +430,7 @@ function TrustXHtb(configs) {
      * ---------------------------------- */
 
     (function __constructor() {
+        ComplianceService = SpaceCamp.services.ComplianceService;
         EventsService = SpaceCamp.services.EventsService;
         RenderService = SpaceCamp.services.RenderService;
 
@@ -383,8 +445,8 @@ function TrustXHtb(configs) {
         __profile = {
             partnerId: 'TrustXHtb', // PartnerName
             namespace: 'TrustXHtb', // Should be same as partnerName
-            statsId: 'TRSTX',
-            version: '2.2.0',
+            statsId: 'TRSTX', // Unique partner identifier
+            version: '2.1.1',
             targetingType: 'slot',
             enabledAnalytics: {
                 requestTime: true
@@ -405,7 +467,7 @@ function TrustXHtb(configs) {
                 pm: 'ix_trstx_cpm',
                 pmid: 'ix_trstx_dealid'
             },
-            bidUnitInCents: 100,
+            bidUnitInCents: 100, // The bid price unit (in cents) the endpoint returns, please refer to the readme for details
             lineItemType: Constants.LineItemTypes.ID_AND_SIZE,
             callbackType: Partner.CallbackTypes.CALLBACK_NAME, // Callback type, please refer to the readme for details
             architecture: Partner.Architectures.SRA, // Request architecture, please refer to the readme for details
@@ -420,8 +482,6 @@ function TrustXHtb(configs) {
             throw Whoopsie('INVALID_CONFIG', results);
         }
         //? }
-
-        __baseUrl = Browser.getProtocol() + '//sofia.trustx.org/hb';
 
         __baseClass = Partner(__profile, configs, null, {
             parseResponse: __parseResponse,
