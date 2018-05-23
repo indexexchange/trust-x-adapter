@@ -296,7 +296,7 @@ The final returned object should looks something like this:
 }
 ```
 
-If your endpoint uses POST please add the following `networkParamOverrides` object to your return object:
+If your endpoint uses POST please add the following `netoworkParamOverrides` object to your return object:
 ```javascript
 {
     url: 'http://bidserver.com/api/bids' // base request url for a POST request
@@ -680,5 +680,3 @@ However these tests are very basic and we encourage you to write your own test c
 ### <a name='additional'></a> Creating Additional Tests
 
 In order to create additional test cases and further verify your module, please fill out the `ADD MORE TEST CASES TO TEST AGAINST REAL VALUES` section in both `generateRequestObj.spec.js` and `parseResponse.spec.js` for your corresponding module architecture type.
-
-

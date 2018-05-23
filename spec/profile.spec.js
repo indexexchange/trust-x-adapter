@@ -34,7 +34,7 @@ describe('Partner Profile', function () {
     var expect = require('chai').expect;
     /* -------------------------------------------------------------------- */
 
-    /* Instantiate your partner module */
+    /* Instatiate your partner module */
     var partnerModule = partnerModule(partnerConfig);
     var partnerProfile = partnerModule.profile;
 
@@ -57,7 +57,7 @@ describe('Partner Profile', function () {
                 },
                 statsId: {
                     type: 'string',
-                    eq: 'TRSTX'
+                    ne: 'PNH'
                 },
                 version: {
                     type: 'string'
@@ -102,7 +102,7 @@ describe('Partner Profile', function () {
                                 if (targetingSplit[0] !== 'ix' ||
                                     targetingSplit[1] !== profile.statsId.toLowerCase() ||
                                     targetingSplit[2] !== 'id') {
-                                    this.report('id tageting key should be of the format ix_{TRSTX}_id')
+                                    this.report('id tageting key should be of the format ix_{statsId}_id')
                                 }
                             }
                         },
@@ -114,7 +114,7 @@ describe('Partner Profile', function () {
                                 if (targetingSplit[0] !== 'ix' ||
                                     targetingSplit[1] !== profile.statsId.toLowerCase() ||
                                     targetingSplit[2] !== 'cpm') {
-                                    this.report('om tageting key should be of the format ix_TRSTX_cpm')
+                                    this.report('om tageting key should be of the format ix_{statsId}_cpm')
                                 }
                             }
                         },
@@ -126,7 +126,7 @@ describe('Partner Profile', function () {
                                 if (targetingSplit[0] !== 'ix' ||
                                     targetingSplit[1] !== profile.statsId.toLowerCase() ||
                                     targetingSplit[2] !== 'cpm') {
-                                    this.report('pm tageting key should be of the format ix_TRSTX_cpm')
+                                    this.report('pm tageting key should be of the format ix_{statsId}_cpm')
                                 }
                             }
                         },
@@ -138,7 +138,7 @@ describe('Partner Profile', function () {
                                 if (targetingSplit[0] !== 'ix' ||
                                     targetingSplit[1] !== profile.statsId.toLowerCase() ||
                                     targetingSplit[2] !== 'dealid') {
-                                    this.report('pmid tageting key should be of the format ix_TRSTX_dealid')
+                                    this.report('pmid tageting key should be of the format ix_{statsId}_dealid')
                                 }
                             }
                         }

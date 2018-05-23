@@ -69,7 +69,7 @@ describe('generateRequestObj', function () {
     var expect = require('chai').expect;
     /* -------------------------------------------------------------------- */
 
-    /* Instantiate your partner module */
+    /* Instatiate your partner module */
     var partnerModule = partnerModule(partnerConfig);
     var partnerProfile = partnerModule.profile;
 
@@ -80,7 +80,7 @@ describe('generateRequestObj', function () {
     /* Generate a request object using generated mock return parcels. */
     returnParcels = generateReturnParcels(partnerProfile, partnerConfig);
 
-    /* -------- IF SRA, generate a single request for each parcel -------- */
+    /* -------- IF SRA, generate a single request for all the parcels -------- */
     if (partnerProfile.architecture) {
         requestObject = partnerModule.generateRequestObj(returnParcels);
 
@@ -108,7 +108,7 @@ describe('generateRequestObj', function () {
         });
 
         /* Test that the generateRequestObj function creates the correct object by building a URL
-            * from the results. This is the bid request url the wrapper will send out to get demand
+            * from the results. This is the bid request url that wrapper will send out to get demand
             * for your module.
             *
             * The url should contain all the necessary parameters for all of the request parcels
@@ -167,7 +167,7 @@ describe('generateRequestObj', function () {
         it('should contain a data.pt property', function () {
             expect(requestObject.data.pt).to.exist;
         });
-        
+
         it('should contain a data.pt property that is a string', function () {
             expect(typeof requestObject.data.pt === 'string').to.be.true;
         });
@@ -193,7 +193,7 @@ describe('generateRequestObj', function () {
         });
         /* -----------------------------------------------------------------------*/
 
-    /* ---------- IF MRA, generate a single request for each parcel ---------- */
+    /* ---------- IF MRA, generate a single request for all the parcels ---------- */
     } else {
         for (var i = 0; i < returnParcels.length; i++) {
             requestObject = partnerModule.generateRequestObj([returnParcels[i]]);
