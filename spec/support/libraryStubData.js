@@ -139,7 +139,11 @@ var libraryStubData = {
             return (new Date()).getTime();
         }
     },
-    'utilities.js': {},
+    'utilities.js': {
+        isBoolean: function (value) {
+            return typeof value === 'boolean';
+        }
+    },
     'whoopsie.js': function () {
         return null;
     },
