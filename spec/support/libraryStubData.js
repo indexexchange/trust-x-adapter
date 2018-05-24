@@ -52,6 +52,9 @@ var libraryStubData = {
         isXhrSupported: function () {
             return true;
         },
+        img: function (obj) {
+            return;
+        },
         buildUrl: function (base, path, query) {
             if (base[base.length - 1] !== '/' && path) {
                 base = base + '/';
@@ -112,6 +115,16 @@ var libraryStubData = {
                 registerAd: function () {
                     return '_' + Math.random().toString(36).substr(2, 9);
                 }
+            },
+            ComplianceService: {
+                gdpr: {
+                    getConsent: function () {
+                        return {
+                            applies: true,
+                            consentString: "BOQ7WlgOQ7WlgABABwAAABJOACgACAAQABA"
+                        };
+                    }
+                }
             }
         },
     },
@@ -126,7 +139,11 @@ var libraryStubData = {
             return (new Date()).getTime();
         }
     },
-    'utilities.js': {},
+    'utilities.js': {
+        isBoolean: function (value) {
+            return typeof value === 'boolean';
+        }
+    },
     'whoopsie.js': function () {
         return null;
     },
