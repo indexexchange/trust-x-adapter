@@ -111,6 +111,16 @@ var libraryStubData = {
                 },
                 registerAd: function () {
                     return '_' + Math.random().toString(36).substr(2, 9);
+                },
+            },
+            ComplianceService: {
+                gdpr: {
+                    getConsent: function () {
+                        return {
+                            applies: true,
+                            consentString: "BOQ7WlgOQ7WlgABABwAAABJOACgACAAQABA"
+                        };
+                    }
                 }
             }
         },
@@ -126,7 +136,11 @@ var libraryStubData = {
             return (new Date()).getTime();
         }
     },
-    'utilities.js': {},
+    'utilities.js': {
+        isBoolean: function (value) {
+            return typeof value === 'boolean';
+        }
+    },
     'whoopsie.js': function () {
         return null;
     },

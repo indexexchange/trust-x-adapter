@@ -24,6 +24,8 @@ var Size = require('size.js');
 var SpaceCamp = require('space-camp.js');
 var System = require('system.js');
 var Network = require('network.js');
+var Utilities = require('utilities.js');
+var ComplianceService;
 var EventsService;
 var RenderService;
 
@@ -175,6 +177,24 @@ function TrustXHtb(configs) {
          * }
          */
 
+        /* ------------------------ Get consent information -------------------------
+         * If you want to implement GDPR consent in your adapter, use the function
+         * ComplianceService.gdpr.getConsent() which will return an object.
+         *
+         * Here is what the values in that object mean:
+         *      - applies: the boolean value indicating if the request is subject to
+         *      GDPR regulations
+         *      - consentString: the consent string developed by GDPR Consent Working
+         *      Group under the auspices of IAB Europe
+         *
+         * The return object should look something like this:
+         * {
+         *      applies: true,
+         *      consentString: "BOQ7WlgOQ7WlgABABwAAABJOACgACAAQABA"
+         * }
+         */
+        var gdprStatus = ComplianceService.gdpr.getConsent();
+
         /* ---------------- Craft bid request using the above returnParcels --------- */
         var adSlotIds = [];
 
@@ -186,6 +206,18 @@ function TrustXHtb(configs) {
         queryObj.u = Browser.getPageUrl();
         queryObj.pt = 'net';
         queryObj.cb = 'window.' + SpaceCamp.NAMESPACE + '.' + __profile.namespace + '.adResponseCallbacks.' + callbackId;
+
+        /* ------- Put GDPR consent code here if you are implementing GDPR ---------- */
+
+        if (gdprStatus) {
+            if (gdprStatus.consentString) {
+                queryObj.gdpr_consent = gdprStatus.consentString;
+            }
+            queryObj.gdpr_applies =
+                Utilities.isBoolean(gdprStatus.applies)
+                    ? Number(gdprStatus.applies) : 1;
+        }
+
         /* -------------------------------------------------------------------------- */
 
         return {
@@ -369,6 +401,7 @@ function TrustXHtb(configs) {
      * ---------------------------------- */
 
     (function __constructor() {
+        ComplianceService = SpaceCamp.services.ComplianceService;
         EventsService = SpaceCamp.services.EventsService;
         RenderService = SpaceCamp.services.RenderService;
 
