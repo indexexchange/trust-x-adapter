@@ -1,0 +1,18 @@
+{
+    "timeout": 1000,
+    "xSlots": {
+        "1": {
+            "adSlotId": "54321"
+        },
+        "2": {
+            "adSlotId": "12345"
+        },
+        "3": {
+            "adSlotId": "654321"
+        }
+    },
+    "mapping": {
+        "htSlot1": ["1", "2"],
+        "htSlot2": ["3"]
+    }
+}
