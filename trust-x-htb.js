@@ -221,6 +221,10 @@ function TrustXHtb(configs) {
 
         /* -------------------------------------------------------------------------- */
 
+        if (__baseClass._configs.timeout) {
+            queryObj.wtimeout = __baseClass._configs.timeout;
+        }
+
         return {
             url: __baseUrl,
             data: queryObj,

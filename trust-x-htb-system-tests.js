@@ -18,6 +18,7 @@ function getArchitecture() {
 
 function getConfig() {
     return {
+        timeout: 1000,
         xSlots: {
             1: {
                 adSlotId: '44',
@@ -42,6 +43,7 @@ function validateBidRequest(request) {
     // Check query string parameters.
     expect(request.query.auids).toBe('44,45');
     expect(request.query.pt).toBe('net');
+    expect(request.query.wtimeout).toBe('1000');
 }
 
 function getValidResponse(request, creative) {
