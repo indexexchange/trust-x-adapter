@@ -7,7 +7,7 @@
   "license": "SEE LICENSE IN LICENSE.md",
   "devDependencies": {
     "adapter-development-suite": "git+https://github.com/indexexchange/adapter-development-suite.git",
-    "eslint": "^4.13.1",
+    "eslint": "^4.19.1",
     "eslint-config-adapters": "git+https://github.com/indexexchange/eslint-config-adapters.git"
   },
   "scripts": {

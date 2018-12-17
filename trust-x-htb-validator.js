@@ -10,7 +10,6 @@
  * prior written permission of Index Exchange.
  */
 
-
 /**
  * This file contains the necessary validation for the partner configuration.
  * This validation will be performed on the partner specific configuration object
@@ -31,7 +30,7 @@ var Inspector = require('../../../libs/external/schema-inspector.js');
 // Main ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-var partnerValidator = function (configs) {
+function partnerValidator(configs) {
     var result = Inspector.validate({
         type: 'object',
         properties: {
@@ -57,6 +56,6 @@ var partnerValidator = function (configs) {
     }
 
     return null;
-};
+}
 
 module.exports = partnerValidator;
