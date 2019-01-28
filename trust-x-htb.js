@@ -223,6 +223,8 @@ function TrustXHtb(configs) {
 
         if (__baseClass._configs.timeout) {
             queryObj.wtimeout = __baseClass._configs.timeout;
+        } else {
+            queryObj.wtimeout = SpaceCamp.globalTimeout;
         }
 
         return {
