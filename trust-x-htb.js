@@ -222,7 +222,11 @@ function TrustXHtb(configs) {
         /* -------------------------------------------------------------------------- */
 
         if (__baseClass._configs.timeout) {
-            queryObj.wtimeout = __baseClass._configs.timeout;
+            if (SpaceCamp.globalTimeout && SpaceCamp.globalTimeout < __baseClass._configs.timeout) {
+                queryObj.wtimeout = SpaceCamp.globalTimeout;
+            } else {
+                queryObj.wtimeout = __baseClass._configs.timeout;
+            }
         } else {
             queryObj.wtimeout = SpaceCamp.globalTimeout;
         }
